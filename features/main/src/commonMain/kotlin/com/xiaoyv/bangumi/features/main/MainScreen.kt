@@ -67,6 +67,7 @@ fun MainScreen(
 
     BgmNavigationSuiteScaffold(
         appearance = settings.homeTab.appearance,
+        liquidGlassStyle = settings.homeTab.liquidGlassStyle,
         tabs = bottomTabs,
         selected = backStack.current,
         unreadBadge = appState.unread.total,

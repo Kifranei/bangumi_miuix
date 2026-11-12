@@ -88,6 +88,8 @@ import com.xiaoyv.bangumi.core_resource.resources.search_sort_date_create
 import com.xiaoyv.bangumi.core_resource.resources.search_sort_date_update
 import com.xiaoyv.bangumi.core_resource.resources.search_sort_relation
 import com.xiaoyv.bangumi.core_resource.resources.settings_bar_appearance_liquid_glass
+import com.xiaoyv.bangumi.core_resource.resources.settings_bar_liquid_glass_style_ios
+import com.xiaoyv.bangumi.core_resource.resources.settings_bar_liquid_glass_style_os4
 import com.xiaoyv.bangumi.core_resource.resources.settings_bar_appearance_material3
 import com.xiaoyv.bangumi.core_resource.resources.settings_indication_fade
 import com.xiaoyv.bangumi.core_resource.resources.settings_indication_none
@@ -143,6 +145,7 @@ import com.xiaoyv.bangumi.shared.core.types.TimelineTab
 import com.xiaoyv.bangumi.shared.core.types.pixiv.PixivArtworkSearchType
 import com.xiaoyv.bangumi.shared.core.types.pixiv.PixivIllustSearchOrder
 import com.xiaoyv.bangumi.shared.core.types.settings.SettingBottomBarAppearance
+import com.xiaoyv.bangumi.shared.core.types.settings.SettingLiquidGlassStyle
 import com.xiaoyv.bangumi.shared.core.types.settings.SettingIndication
 import com.xiaoyv.bangumi.shared.core.types.settings.SettingNavigationAnimation
 import com.xiaoyv.bangumi.shared.core.types.settings.SettingTheme
@@ -524,6 +527,11 @@ object TabTokens {
     val settingBottomBarAppearanceItems = persistentListOf(
         ComposeTextTab(SettingBottomBarAppearance.MATERIAL3, Res.string.settings_bar_appearance_material3),
         ComposeTextTab(SettingBottomBarAppearance.LIQUID_GLASS, Res.string.settings_bar_appearance_liquid_glass),
+    )
+
+    val settingLiquidGlassStyleItems = persistentListOf(
+        ComposeTextTab(SettingLiquidGlassStyle.IOS, Res.string.settings_bar_liquid_glass_style_ios),
+        ComposeTextTab(SettingLiquidGlassStyle.OS4, Res.string.settings_bar_liquid_glass_style_os4),
     )
 
     val settingTimeoutItems = persistentListOf(

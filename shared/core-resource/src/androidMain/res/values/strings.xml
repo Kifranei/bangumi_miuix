@@ -449,6 +449,9 @@
     <string name="settings_bar_appearance">底栏外观</string>
     <string name="settings_bar_appearance_material3">质感设计</string>
     <string name="settings_bar_appearance_liquid_glass">液态玻璃</string>
+    <string name="settings_bar_liquid_glass_style">液态玻璃样式</string>
+    <string name="settings_bar_liquid_glass_style_ios">iOS 液态玻璃</string>
+    <string name="settings_bar_liquid_glass_style_os4">OS4（Miuix）</string>
     <string name="settings_bar_1">首页底栏 Tab-1</string>
     <string name="settings_bar_2">首页底栏 Tab-2</string>
     <string name="settings_bar_3">首页底栏 Tab-3</string>

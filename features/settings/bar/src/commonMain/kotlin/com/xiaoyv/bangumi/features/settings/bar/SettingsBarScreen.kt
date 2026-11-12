@@ -22,6 +22,7 @@ import com.xiaoyv.bangumi.core_resource.resources.settings_bar_3
 import com.xiaoyv.bangumi.core_resource.resources.settings_bar_4
 import com.xiaoyv.bangumi.core_resource.resources.settings_bar_5
 import com.xiaoyv.bangumi.core_resource.resources.settings_bar_appearance
+import com.xiaoyv.bangumi.core_resource.resources.settings_bar_liquid_glass_style
 import com.xiaoyv.bangumi.core_resource.resources.settings_bar_boot
 import com.xiaoyv.bangumi.core_resource.resources.settings_bar_boot_default
 import com.xiaoyv.bangumi.core_resource.resources.settings_bar_tab
@@ -31,6 +32,7 @@ import com.xiaoyv.bangumi.features.settings.bar.business.SettingsBarState
 import com.xiaoyv.bangumi.features.settings.bar.business.SettingsBarViewModel
 import com.xiaoyv.bangumi.shared.core.mvi.UiState
 import com.xiaoyv.bangumi.shared.core.types.settings.SettingBottomBarAppearance
+import com.xiaoyv.bangumi.shared.core.types.settings.SettingLiquidGlassStyle
 import com.xiaoyv.bangumi.shared.data.manager.shared.currentSettings
 import com.xiaoyv.bangumi.shared.ui.component.bar.BgmLargeTopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -111,15 +113,28 @@ private fun SettingsBarScreenContent(
 
     Column(modifier = Modifier.padding(vertical = 16.dp)) {
         SettingContainer(label = { Text(text = stringResource(Res.string.settings_appearance)) }) {
+            val showLiquidGlassStyle = settings.homeTab.appearance == SettingBottomBarAppearance.LIQUID_GLASS
+            val appearanceItemCount = if (showLiquidGlassStyle) 2 else 1
             SettingOptionItem(
                 title = stringResource(Res.string.settings_bar_appearance),
-                shape = ListItemDefaults.segmentedShapes(0, 1),
+                shape = ListItemDefaults.segmentedShapes(0, appearanceItemCount),
                 value = stringResource(SettingBottomBarAppearance.string(settings.homeTab.appearance)),
                 items = TabTokens.settingBottomBarAppearanceItems,
                 onClick = {
                     onActionEvent(SettingsBarEvent.Action.OnUpdate(settings.homeTab.copy(appearance = it)))
                 }
             )
+            if (showLiquidGlassStyle) {
+                SettingOptionItem(
+                    title = stringResource(Res.string.settings_bar_liquid_glass_style),
+                    shape = ListItemDefaults.segmentedShapes(1, appearanceItemCount),
+                    value = stringResource(SettingLiquidGlassStyle.string(settings.homeTab.liquidGlassStyle)),
+                    items = TabTokens.settingLiquidGlassStyleItems,
+                    onClick = {
+                        onActionEvent(SettingsBarEvent.Action.OnUpdate(settings.homeTab.copy(liquidGlassStyle = it)))
+                    }
+                )
+            }
         }
         SettingContainer(label = { Text(text = stringResource(Res.string.settings_bar_boot)) }) {
             SettingOptionItem(
