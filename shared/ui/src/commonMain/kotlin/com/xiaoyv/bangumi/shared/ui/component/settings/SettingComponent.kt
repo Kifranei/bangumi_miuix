@@ -47,10 +47,10 @@ import top.yukonga.miuix.kmp.basic.Card as MiuixCard
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.preference.ArrowPreference as MiuixArrowPreference
-import top.yukonga.miuix.kmp.preference.WindowDropdownPreference as MiuixWindowDropdownPreference
 import com.xiaoyv.bangumi.shared.ui.view.rememberMenuHapticFeedback
 import top.yukonga.miuix.kmp.preference.SwitchPreference as MiuixSwitchPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.xiaoyv.bangumi.shared.ui.view.Os4DropdownPreference
 import com.xiaoyv.bangumi.shared.ui.theme.ContentMarginHalf
 
 /**
@@ -251,7 +251,7 @@ fun <T : Any> SettingOptionItem(
 ) {
     if (isMiuixUi()) {
         val labels = items.map { it.displayText() }
-        MiuixWindowDropdownPreference(
+        Os4DropdownPreference(
             title = title,
             summary = description,
             items = labels,

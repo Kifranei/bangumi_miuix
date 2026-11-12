@@ -13,6 +13,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.ListItemShapes
+import com.xiaoyv.bangumi.core_resource.resources.settings_top_app_bar_progressive_blur
+import com.xiaoyv.bangumi.core_resource.resources.settings_top_app_bar_progressive_blur_desc
 import com.xiaoyv.bangumi.shared.ui.view.BgmScaffold as Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -266,7 +268,8 @@ private fun SettingsAppearanceSection(
     settings: ComposeSetting.UIConfig,
     onUpdate: (ComposeSetting.UIConfig) -> Unit,
 ) {
-    val itemCount = if (settings.monetTheme) 6 else 5
+    val showProgressiveBlur = settings.style == SettingUiStyle.MIUIX
+    val itemCount = (if (settings.monetTheme) 6 else 5) + if (showProgressiveBlur) 1 else 0
     val themeIndex = if (settings.monetTheme) 3 else 2
 
     SettingContainer(label = { Text(text = stringResource(Res.string.settings_appearance)) }) {
@@ -309,6 +312,16 @@ private fun SettingsAppearanceSection(
             value = stringResource(SettingIndication.string(settings.indication)),
             onClick = { onUpdate(settings.copy(indication = it)) },
         )
+
+        if (showProgressiveBlur) {
+            SettingSwitchItem(
+                title = stringResource(Res.string.settings_top_app_bar_progressive_blur),
+                shape = ListItemDefaults.segmentedShapes(itemCount - 2, itemCount),
+                description = stringResource(Res.string.settings_top_app_bar_progressive_blur_desc),
+                value = settings.topAppBarProgressiveBlur,
+                onValueChange = { onUpdate(settings.copy(topAppBarProgressiveBlur = it)) },
+            )
+        }
 
         SettingSwitchItem(
             title = stringResource(Res.string.settings_top_app_bar_scroll_up),

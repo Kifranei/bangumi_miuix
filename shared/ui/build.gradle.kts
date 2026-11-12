@@ -20,6 +20,7 @@ kotlin {
             api(libs.miuix.ui)
             api(libs.miuix.preference)
             api(libs.miuix.icons)
+            api(libs.miuix.blur)
         }
 
         commonTest.dependencies {

@@ -41,15 +41,11 @@ import com.xiaoyv.bangumi.shared.ui.component.tab.ComposeTextTab
 import com.xiaoyv.bangumi.shared.ui.theme.BgmIcons
 import com.xiaoyv.bangumi.shared.ui.theme.isMiuixUi
 import com.xiaoyv.bangumi.shared.ui.theme.ContentMarginHalf
+import com.xiaoyv.bangumi.shared.ui.view.GlassListPopup
 import com.xiaoyv.bangumi.shared.ui.view.MiuixActionMenu
 import com.xiaoyv.bangumi.shared.ui.view.rememberMenuHapticFeedback
-import com.xiaoyv.bangumi.shared.core.types.ButtonType
 import org.jetbrains.compose.resources.stringResource
-import top.yukonga.miuix.kmp.basic.DropdownDefaults
-import top.yukonga.miuix.kmp.basic.DropdownEntry
-import top.yukonga.miuix.kmp.basic.DropdownItem
-import top.yukonga.miuix.kmp.menu.WindowIconDropdownMenu
-import top.yukonga.miuix.kmp.popup.WindowDropdownPopup
+import top.yukonga.miuix.kmp.glass.GlassPopupItem
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
@@ -66,28 +62,8 @@ fun <T : Any> DropMenuActionButton(
     val openingFeedback = rememberMenuHapticFeedback()
     val selectionFeedback = rememberMenuHapticFeedback(HapticFeedbackType.Confirm)
     if (isMiuixUi()) {
-        if (options.any { it.type == ButtonType.Delete || it.type == ButtonType.Report || it.type == ButtonType.Block }) {
-            MiuixActionMenu(options, imageVector, imageTint, modifier, current, onOptionClick)
-            return
-        }
-        WindowIconDropdownMenu(
-            modifier = modifier,
-            entry = DropdownEntry(
-                items = options.map { tab ->
-                    DropdownItem(
-                        text = tab.displayText(),
-                        selected = tab.type == current,
-                        onClick = { onOptionClick(tab) },
-                    )
-                },
-            ),
-        ) {
-            MiuixIcon(
-                imageVector = imageVector,
-                contentDescription = stringResource(Res.string.global_more),
-                tint = imageTint,
-            )
-        }
+        // OS4 玻璃下拉：操作菜单统一由 MiuixActionMenu 承载，删除/举报等项保留语义颜色。
+        MiuixActionMenu(options, imageVector, imageTint, modifier, current, onOptionClick)
         return
     }
 
@@ -180,23 +156,22 @@ fun <T : Any> DropMenuChip(
                 trailingIcon?.invoke()
             }
 
-            WindowDropdownPopup(
-                entry = DropdownEntry(
-                    items = options.map { tab ->
-                        DropdownItem(
-                            text = tab.displayText(),
-                            selected = tab.type == current,
-                            onClick = { onOptionClick(tab) },
-                        )
-                    },
-                ),
+            GlassListPopup(
                 show = expanded,
-                onDismiss = { expanded = false },
-                onDismissFinished = {},
-                maxHeight = null,
-                dropdownColors = DropdownDefaults.dropdownColors(),
-                collapseOnSelection = true,
-            )
+                onDismissRequest = { expanded = false },
+            ) {
+                options.forEach { tab ->
+                    GlassPopupItem(
+                        text = tab.displayText(),
+                        selected = tab.type == current,
+                        onClick = {
+                            selectionFeedback()
+                            expanded = false
+                            onOptionClick(tab)
+                        },
+                    )
+                }
+            }
         }
         return
     }

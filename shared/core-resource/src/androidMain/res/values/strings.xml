@@ -426,6 +426,8 @@
     <string name="settings_cache_state_desc">开启时，跳转条目、人物等页面会立即加载缓存，配合导航动画可能在部分设备有轻微掉帧</string>
     <string name="settings_top_app_bar_scroll_up">标题栏点击回顶</string>
     <string name="settings_top_app_bar_scroll_up_desc">点击页面标题时，自动将当前内容滚动到顶部</string>
+    <string name="settings_top_app_bar_progressive_blur">顶栏渐进模糊</string>
+    <string name="settings_top_app_bar_progressive_blur_desc">Miuix 风格下，内容滚动到顶栏下方时逐渐模糊（Android 13 及以上，低版本为渐变着色）</string>
     <string name="settings_performance">性能</string>
     <string name="settings_indication">触摸反馈</string>
     <string name="settings_indication_none">无</string>
@@ -447,6 +449,9 @@
     <string name="settings_bar_appearance">底栏外观</string>
     <string name="settings_bar_appearance_material3">质感设计</string>
     <string name="settings_bar_appearance_liquid_glass">液态玻璃</string>
+    <string name="settings_bar_liquid_glass_style">液态玻璃样式</string>
+    <string name="settings_bar_liquid_glass_style_ios">iOS 液态玻璃</string>
+    <string name="settings_bar_liquid_glass_style_os4">OS4（Miuix）</string>
     <string name="settings_bar_1">首页底栏 Tab-1</string>
     <string name="settings_bar_2">首页底栏 Tab-2</string>
     <string name="settings_bar_3">首页底栏 Tab-3</string>

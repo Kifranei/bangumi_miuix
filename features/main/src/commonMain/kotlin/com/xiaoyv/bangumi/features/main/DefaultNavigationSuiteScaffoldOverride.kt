@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.xiaoyv.bangumi.shared.core.types.settings.SettingBottomBarAppearance
+import com.xiaoyv.bangumi.shared.core.types.settings.SettingLiquidGlassStyle
 import com.xiaoyv.bangumi.shared.ui.view.navigation.FloatingBottomBarDefaults
 import com.xiaoyv.bangumi.shared.ui.view.navigation.LocalFloatingBottomBarActiveIndex
 import com.xiaoyv.bangumi.shared.ui.view.navigation.LocalFloatingBottomBarIsDragging
@@ -47,6 +48,7 @@ import com.xiaoyv.bangumi.shared.ui.view.navigation.floatingBottomBarBottomPaddi
 import com.xiaoyv.bangumi.shared.ui.component.tab.ComposeVectorTab
 import com.xiaoyv.bangumi.shared.ui.kts.isWideScreen
 import com.xiaoyv.bangumi.shared.ui.theme.isMiuixUi
+import com.xiaoyv.bangumi.shared.ui.view.LocalGlassBackdrop
 import com.xiaoyv.bangumi.shared.ui.theme.ContentMargin
 import com.xiaoyv.bangumi.shared.ui.theme.ContentMarginHalf
 import kotlinx.collections.immutable.PersistentList
@@ -58,6 +60,13 @@ import top.yukonga.miuix.kmp.basic.NavigationBarItem as MiuixNavigationBarItem
 import top.yukonga.miuix.kmp.basic.NavigationRail as MiuixNavigationRail
 import top.yukonga.miuix.kmp.basic.NavigationRailItem as MiuixNavigationRailItem
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import top.yukonga.miuix.kmp.blur.LayerBackdrop
+import top.yukonga.miuix.kmp.blur.isRuntimeShaderSupported
+import top.yukonga.miuix.kmp.blur.layerBackdrop as miuixLayerBackdrop
+import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop as rememberMiuixLayerBackdrop
+import top.yukonga.miuix.kmp.glass.GlassNavigationBar
+import top.yukonga.miuix.kmp.glass.GlassNavigationBarDefaults
+import top.yukonga.miuix.kmp.glass.GlassNavigationItem
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
@@ -71,6 +80,7 @@ fun BgmNavigationSuiteScaffold(
     unreadBadge: Int,
     onTabClick: (Screen) -> Unit,
     modifier: Modifier = Modifier,
+    @SettingLiquidGlassStyle liquidGlassStyle: Int = SettingLiquidGlassStyle.IOS,
     content: @Composable () -> Unit = {},
 ) {
     val miuix = isMiuixUi()
@@ -84,8 +94,9 @@ fun BgmNavigationSuiteScaffold(
         return
     }
 
+    val liquidGlass = appearance == SettingBottomBarAppearance.LIQUID_GLASS
     when {
-        appearance == SettingBottomBarAppearance.LIQUID_GLASS && miuix -> MiuixLiquidNavigation(
+        liquidGlass && liquidGlassStyle == SettingLiquidGlassStyle.OS4 -> Os4GlassNavigation(
             modifier = modifier,
             tabs = tabs,
             selected = selected,
@@ -94,7 +105,16 @@ fun BgmNavigationSuiteScaffold(
             content = content,
         )
 
-        appearance == SettingBottomBarAppearance.LIQUID_GLASS -> LiquidNavigation(
+        liquidGlass && miuix -> MiuixLiquidNavigation(
+            modifier = modifier,
+            tabs = tabs,
+            selected = selected,
+            unreadBadge = unreadBadge,
+            onTabClick = onTabClick,
+            content = content,
+        )
+
+        liquidGlass -> LiquidNavigation(
             modifier = modifier,
             tabs = tabs,
             selected = selected,
@@ -302,6 +322,9 @@ private fun LiquidTabContent(
     Text(text = label, color = tint, style = MaterialTheme.typography.bodySmall, maxLines = 1)
 }
 
+/**
+ * Miuix 风格下的 iOS 风格液态玻璃悬浮底栏（Kyant Backdrop），Miuix 配色。
+ */
 @Composable
 private fun MiuixLiquidNavigation(
     modifier: Modifier,
@@ -371,6 +394,69 @@ private fun MiuixLiquidNavigation(
                 }
             }
         }
+    }
+}
+
+/**
+ * OS4 液态玻璃底栏，移植自 Halcyon 的 HyperOS 4（OS4）玻璃胶囊底栏（miuix-glass `GlassNavigationBar`）。
+ *
+ * 页面内容录制进 miuix-blur 的 [LayerBackdrop]，底栏胶囊采样其模糊；RuntimeShader 不可用（Android 13 以下）时退化为不透明胶囊。
+ *
+ * @param tabs 底栏入口。
+ * @param selected 当前选中的入口。
+ * @param unreadBadge 个人页未读角标数量。
+ * @param onTabClick 切换入口。
+ */
+@Composable
+private fun Os4GlassNavigation(
+    modifier: Modifier,
+    tabs: PersistentList<Pair<Screen, ComposeVectorTab<String>>>,
+    selected: Screen?,
+    unreadBadge: Int,
+    onTabClick: (Screen) -> Unit,
+    content: @Composable () -> Unit,
+) {
+    val backdrop = rememberMiuixLayerBackdrop()
+    val glassBackdrop = if (isRuntimeShaderSupported()) backdrop else null
+    val density = LocalDensity.current
+    val initialBarHeight = GlassNavigationBarDefaults.Height + ContentMargin * 2
+    var barHeight by remember(density) { mutableStateOf(initialBarHeight) }
+    val selectedIndex = tabs.indexOfFirst { it.first == selected }.coerceAtLeast(0)
+    val items = tabs.map { item ->
+        val label = stringResource(item.second.label)
+        GlassNavigationItem(
+            icon = item.second.icon,
+            label = label,
+            contentDescription = label,
+            badge = if (unreadBadge > 0 && item.first == Screen.Profile) unreadBadge.toString() else null,
+        )
+    }
+
+    Box(modifier = modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .then(if (glassBackdrop != null) Modifier.miuixLayerBackdrop(glassBackdrop) else Modifier)
+                .consumeWindowInsets(WindowInsets.navigationBars)
+                .consumeWindowInsets(WindowInsets.captionBar),
+        ) {
+            CompositionLocalProvider(
+                LocalMainBottomBarOverlap provides barHeight + ContentMarginHalf,
+                LocalGlassBackdrop provides glassBackdrop,
+            ) {
+                content()
+            }
+        }
+        GlassNavigationBar(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .onSizeChanged { barHeight = with(density) { it.height.toDp() } }
+                .padding(horizontal = ContentMargin),
+            items = items,
+            selectedIndex = selectedIndex,
+            onSelect = { index -> tabs.getOrNull(index)?.first?.let { if (it != selected) onTabClick(it) } },
+            backdrop = glassBackdrop,
+        )
     }
 }
 
