@@ -48,6 +48,7 @@ import com.xiaoyv.bangumi.shared.ui.view.navigation.floatingBottomBarBottomPaddi
 import com.xiaoyv.bangumi.shared.ui.component.tab.ComposeVectorTab
 import com.xiaoyv.bangumi.shared.ui.kts.isWideScreen
 import com.xiaoyv.bangumi.shared.ui.theme.isMiuixUi
+import com.xiaoyv.bangumi.shared.ui.view.LocalGlassBackdrop
 import com.xiaoyv.bangumi.shared.ui.theme.ContentMargin
 import com.xiaoyv.bangumi.shared.ui.theme.ContentMarginHalf
 import kotlinx.collections.immutable.PersistentList
@@ -439,7 +440,10 @@ private fun Os4GlassNavigation(
                 .consumeWindowInsets(WindowInsets.navigationBars)
                 .consumeWindowInsets(WindowInsets.captionBar),
         ) {
-            CompositionLocalProvider(LocalMainBottomBarOverlap provides barHeight + ContentMarginHalf) {
+            CompositionLocalProvider(
+                LocalMainBottomBarOverlap provides barHeight + ContentMarginHalf,
+                LocalGlassBackdrop provides glassBackdrop,
+            ) {
                 content()
             }
         }

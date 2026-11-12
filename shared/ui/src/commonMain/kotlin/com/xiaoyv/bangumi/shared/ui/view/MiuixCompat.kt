@@ -90,7 +90,9 @@ fun BgmScaffold(
             }
         }
     }
-    CompositionLocalProvider(LocalContentColor provides contentColor) {
+    // 顶栏渐进模糊的页面 backdrop 同时供 OS4 玻璃下拉弹窗采样；没有时沿用外层（OS4 底栏）的 backdrop。
+    val glassBackdrop = blurBackdrop ?: LocalGlassBackdrop.current
+    CompositionLocalProvider(LocalContentColor provides contentColor, LocalGlassBackdrop provides glassBackdrop) {
         if (miuix) {
             MiuixScaffold(
                 modifier = modifier,

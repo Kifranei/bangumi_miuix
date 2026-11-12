@@ -21,12 +21,11 @@ import top.yukonga.miuix.kmp.basic.DropdownImpl
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.ListPopupColumn
-import top.yukonga.miuix.kmp.basic.PopupPositionProvider
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.window.WindowListPopup
+import top.yukonga.miuix.kmp.glass.GlassPopupItem
 
 /**
- * 使用 Miuix 窗口及列表行显示操作菜单，并保留删除等操作的语义颜色。
+ * 使用 Halcyon 的 OS4 玻璃下拉弹窗显示操作菜单，并保留删除等操作的语义颜色。
  *
  * @param options 可用操作及其颜色。
  * @param current 当前选中值，普通操作菜单可以省略。
@@ -50,17 +49,35 @@ fun <T : Any> MiuixActionMenu(
         }) {
             Icon(imageVector, stringResource(Res.string.global_more), tint = imageTint)
         }
-        WindowListPopup(
+        GlassListPopup(
             show = expanded,
-            alignment = PopupPositionProvider.Align.End,
             onDismissRequest = { expanded = false },
         ) {
-            MiuixActionMenuItems(options, current) { tab ->
-                expanded = false
-                onOptionClick(tab)
+            val selectionFeedback = rememberMenuHapticFeedback(HapticFeedbackType.Confirm)
+            options.forEach { tab ->
+                GlassPopupItem(
+                    text = tab.displayText(),
+                    selected = tab.type == current,
+                    contentColor = miuixActionMenuColor(tab),
+                    onClick = {
+                        selectionFeedback()
+                        expanded = false
+                        onOptionClick(tab)
+                    },
+                )
             }
         }
     }
+}
+
+/**
+ * 操作菜单项的语义颜色：删除、举报使用错误色，其次使用选项自带颜色。
+ */
+@Composable
+private fun <T : Any> miuixActionMenuColor(tab: ComposeTextTab<T>): Color = when {
+    tab.type == ButtonType.Delete || tab.type == ButtonType.Report -> MiuixTheme.colorScheme.error
+    tab.contentColor != Color.Unspecified -> tab.contentColor
+    else -> MiuixTheme.colorScheme.onSurfaceContainer
 }
 
 /**
@@ -79,11 +96,7 @@ internal fun <T : Any> MiuixActionMenuItems(
     val selectionFeedback = rememberMenuHapticFeedback(HapticFeedbackType.Confirm)
     ListPopupColumn {
         options.forEachIndexed { index, tab ->
-            val color = when {
-                tab.type == ButtonType.Delete || tab.type == ButtonType.Report -> MiuixTheme.colorScheme.error
-                tab.contentColor != Color.Unspecified -> tab.contentColor
-                else -> MiuixTheme.colorScheme.onSurfaceContainer
-            }
+            val color = miuixActionMenuColor(tab)
             DropdownImpl(
                 text = tab.displayText(),
                 optionSize = options.size,
