@@ -2,6 +2,7 @@ package com.xiaoyv.bangumi.shared.ui.view
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -31,6 +32,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.xiaoyv.bangumi.shared.data.manager.shared.currentSettings
 import com.xiaoyv.bangumi.shared.ui.theme.isMiuixUi
 import com.xiaoyv.bangumi.shared.ui.view.navigation.LocalMainBottomBarOverlap
 import com.xiaoyv.bangumi.shared.ui.view.navigation.LocalFloatingContentBottomPadding
@@ -38,6 +40,7 @@ import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.FabPosition as MiuixFabPosition
 import top.yukonga.miuix.kmp.basic.Scaffold as MiuixScaffold
 import top.yukonga.miuix.kmp.basic.Switch as MiuixSwitch
+import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
@@ -67,26 +70,39 @@ fun BgmScaffold(
     val hostedSnackbar: @Composable () -> Unit = {
         RaisedScaffoldSlot(if (hasFab) 0.dp else overlap, content = snackbarHost)
     }
+    val miuix = isMiuixUi()
+    val progressiveBlur = miuix && currentSettings().ui.topAppBarProgressiveBlur
+    val blurBackdrop = rememberProgressiveBlurBackdrop(color = containerColor, enabled = progressiveBlur)
     val hostedContent: @Composable (PaddingValues) -> Unit = { padding ->
-        CompositionLocalProvider(
-            LocalMainBottomBarOverlap provides 0.dp,
-            LocalFloatingContentBottomPadding provides overlap,
-        ) {
-            content(
-                PaddingValues(
-                    start = padding.calculateStartPadding(layoutDirection),
-                    top = padding.calculateTopPadding(),
-                    end = padding.calculateEndPadding(layoutDirection),
-                    bottom = padding.calculateBottomPadding(),
+        ProgressiveBlurContent(blurBackdrop) {
+            CompositionLocalProvider(
+                LocalMainBottomBarOverlap provides 0.dp,
+                LocalFloatingContentBottomPadding provides overlap,
+            ) {
+                content(
+                    PaddingValues(
+                        start = padding.calculateStartPadding(layoutDirection),
+                        top = padding.calculateTopPadding(),
+                        end = padding.calculateEndPadding(layoutDirection),
+                        bottom = padding.calculateBottomPadding(),
+                    )
                 )
-            )
+            }
         }
     }
     CompositionLocalProvider(LocalContentColor provides contentColor) {
-        if (isMiuixUi()) {
+        if (miuix) {
             MiuixScaffold(
                 modifier = modifier,
-                topBar = topBar,
+                topBar = if (progressiveBlur) {
+                    {
+                        ProgressiveBlurTopBar(backdrop = blurBackdrop, color = containerColor) {
+                            CompositionLocalProvider(LocalTopBarProgressiveBlur provides true, content = topBar)
+                        }
+                    }
+                } else {
+                    topBar
+                },
                 bottomBar = bottomBar,
                 snackbarHost = hostedSnackbar,
                 floatingActionButton = hostedFab,
@@ -114,6 +130,26 @@ fun BgmScaffold(
                 content = hostedContent,
             )
         }
+    }
+}
+
+/**
+ * 把页面内容录制进顶栏渐进模糊的 backdrop，[backdrop] 为空时直接绘制内容。
+ *
+ * @param backdrop 顶栏渐进模糊采样的 backdrop。
+ * @param content 页面内容。
+ */
+@Composable
+private fun ProgressiveBlurContent(
+    backdrop: LayerBackdrop?,
+    content: @Composable () -> Unit,
+) {
+    if (backdrop == null) {
+        content()
+        return
+    }
+    Box(modifier = Modifier.progressiveBlurSource(backdrop), propagateMinConstraints = true) {
+        content()
     }
 }
 

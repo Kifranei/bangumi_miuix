@@ -25,6 +25,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -38,6 +39,7 @@ import com.xiaoyv.bangumi.shared.ui.component.scroll.LocalScrollUpState
 import com.xiaoyv.bangumi.shared.ui.theme.BgmIconsMirrored
 import com.xiaoyv.bangumi.shared.ui.theme.ContentMargin
 import com.xiaoyv.bangumi.shared.ui.theme.isMiuixUi
+import com.xiaoyv.bangumi.shared.ui.view.LocalTopBarProgressiveBlur
 import com.xiaoyv.bangumi.shared.ui.view.MiuixCustomTitleBar
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
@@ -77,6 +79,7 @@ fun BgmTopAppBar(
     val scope = rememberCoroutineScope()
 
     if (isMiuixUi()) {
+        val colors = progressiveBlurBarColors(colors)
         SideEffect {
             scrollBehavior?.state?.let {
                 it.heightOffsetLimit = 0f
@@ -170,6 +173,7 @@ fun BgmLargeTopAppBar(
     val scope = rememberCoroutineScope()
 
     if (isMiuixUi()) {
+        val colors = progressiveBlurBarColors(colors)
         if (title == null) {
             MiuixCustomTitleBar(
                 modifier = modifier.background(colors.containerColor).windowInsetsPadding(windowInsets),
@@ -241,6 +245,19 @@ fun BgmLargeTopAppBar(
         colors = colors,
         scrollBehavior = scrollBehavior
     )
+}
+
+/**
+ * 顶栏处于渐进模糊背景之上时，把默认的不透明背景换成透明，让下方的模糊层透出；
+ * 页面自定义的背景色保持不变。
+ *
+ * @param colors 调用方传入的顶栏配色。
+ */
+@Composable
+private fun progressiveBlurBarColors(colors: TopAppBarColors): TopAppBarColors {
+    if (!LocalTopBarProgressiveBlur.current) return colors
+    val defaultContainer = TopAppBarDefaults.topAppBarColors().containerColor
+    return if (colors.containerColor == defaultContainer) colors.copy(containerColor = Color.Transparent) else colors
 }
 
 /**

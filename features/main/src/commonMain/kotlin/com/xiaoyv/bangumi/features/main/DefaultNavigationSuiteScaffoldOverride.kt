@@ -36,8 +36,6 @@ import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.xiaoyv.bangumi.shared.core.types.settings.SettingBottomBarAppearance
 import com.xiaoyv.bangumi.shared.ui.view.navigation.FloatingBottomBarDefaults
-import com.xiaoyv.bangumi.shared.ui.view.navigation.LocalFloatingBottomBarActiveIndex
-import com.xiaoyv.bangumi.shared.ui.view.navigation.LocalFloatingBottomBarIsDragging
 import com.xiaoyv.bangumi.shared.ui.view.navigation.LocalMainBottomBarOverlap
 import com.xiaoyv.bangumi.shared.ui.component.navigation.Screen
 import com.xiaoyv.bangumi.shared.ui.view.navigation.FloatingBottomBar
@@ -52,13 +50,18 @@ import com.xiaoyv.bangumi.shared.ui.theme.ContentMarginHalf
 import kotlinx.collections.immutable.PersistentList
 import org.jetbrains.compose.resources.stringResource
 import top.yukonga.miuix.kmp.basic.Badge as MiuixBadge
-import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.NavigationBar as MiuixNavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarItem as MiuixNavigationBarItem
 import top.yukonga.miuix.kmp.basic.NavigationRail as MiuixNavigationRail
 import top.yukonga.miuix.kmp.basic.NavigationRailItem as MiuixNavigationRailItem
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.blur.LayerBackdrop
+import top.yukonga.miuix.kmp.blur.isRuntimeShaderSupported
+import top.yukonga.miuix.kmp.blur.layerBackdrop as miuixLayerBackdrop
+import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop as rememberMiuixLayerBackdrop
+import top.yukonga.miuix.kmp.glass.GlassNavigationBar
+import top.yukonga.miuix.kmp.glass.GlassNavigationBarDefaults
+import top.yukonga.miuix.kmp.glass.GlassNavigationItem
 
 /**
  * 主页面导航，主题风格与底栏外观独立设置，宽屏使用侧边导航。
@@ -302,6 +305,16 @@ private fun LiquidTabContent(
     Text(text = label, color = tint, style = MaterialTheme.typography.bodySmall, maxLines = 1)
 }
 
+/**
+ * Miuix 风格下的液态玻璃底栏，移植自 Halcyon 的 HyperOS 4（OS4）玻璃胶囊底栏（miuix-glass `GlassNavigationBar`）。
+ *
+ * 页面内容录制进 miuix-blur 的 [LayerBackdrop]，底栏胶囊采样其模糊；RuntimeShader 不可用（Android 13 以下）时退化为不透明胶囊。
+ *
+ * @param tabs 底栏入口。
+ * @param selected 当前选中的入口。
+ * @param unreadBadge 个人页未读角标数量。
+ * @param onTabClick 切换入口。
+ */
 @Composable
 private fun MiuixLiquidNavigation(
     modifier: Modifier,
@@ -311,66 +324,44 @@ private fun MiuixLiquidNavigation(
     onTabClick: (Screen) -> Unit,
     content: @Composable () -> Unit,
 ) {
-    val backdrop = rememberLayerBackdrop()
-    val barBottom = floatingBottomBarBottomPadding()
+    val backdrop = rememberMiuixLayerBackdrop()
+    val glassBackdrop = if (isRuntimeShaderSupported()) backdrop else null
     val density = LocalDensity.current
-    var barHeight by remember(density) { mutableStateOf(FloatingBottomBarDefaults.Height) }
+    val initialBarHeight = GlassNavigationBarDefaults.Height + ContentMargin * 2
+    var barHeight by remember(density) { mutableStateOf(initialBarHeight) }
+    val selectedIndex = tabs.indexOfFirst { it.first == selected }.coerceAtLeast(0)
+    val items = tabs.map { item ->
+        val label = stringResource(item.second.label)
+        GlassNavigationItem(
+            icon = item.second.icon,
+            label = label,
+            contentDescription = label,
+            badge = if (unreadBadge > 0 && item.first == Screen.Profile) unreadBadge.toString() else null,
+        )
+    }
+
     Box(modifier = modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
                 .matchParentSize()
-                .layerBackdrop(backdrop)
+                .then(if (glassBackdrop != null) Modifier.miuixLayerBackdrop(glassBackdrop) else Modifier)
                 .consumeWindowInsets(WindowInsets.navigationBars)
                 .consumeWindowInsets(WindowInsets.captionBar),
         ) {
-            CompositionLocalProvider(LocalMainBottomBarOverlap provides barHeight + barBottom + ContentMarginHalf) {
+            CompositionLocalProvider(LocalMainBottomBarOverlap provides barHeight + ContentMarginHalf) {
                 content()
             }
         }
-        FloatingBottomBar(
+        GlassNavigationBar(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = barBottom)
-                .padding(horizontal = ContentMargin)
-                .onSizeChanged { barHeight = with(density) { it.height.toDp() } },
-            selectedIndex = { tabs.indexOfFirst { it.first == selected }.coerceAtLeast(0) },
-            onSelected = { onTabClick(tabs[it].first) },
-            backdrop = backdrop,
-            tabsCount = tabs.size,
-        ) {
-            tabs.forEachIndexed { index, item ->
-                val activeIndex = LocalFloatingBottomBarActiveIndex.current
-                val dragging = LocalFloatingBottomBarIsDragging.current
-                val highlighted = if (dragging && activeIndex >= 0) {
-                    activeIndex == index
-                } else {
-                    item.first == selected
-                }
-                val tint = if (highlighted) {
-                    MiuixTheme.colorScheme.primary
-                } else {
-                    MiuixTheme.colorScheme.onSurface
-                }
-                FloatingBottomBarItem(
-                    selected = item.first == selected,
-                    onClick = { onTabClick(item.first) },
-                    contentColor = tint,
-                ) {
-                    val label = stringResource(item.second.label)
-                    val showBadge = unreadBadge > 0 && item.first == Screen.Profile
-                    if (showBadge) {
-                        top.yukonga.miuix.kmp.basic.BadgedBox(
-                            badge = { MiuixBadge { MiuixText(unreadBadge.toString()) } },
-                        ) {
-                            MiuixIcon(item.second.icon, null, Modifier.size(26.dp), tint)
-                        }
-                    } else {
-                        MiuixIcon(item.second.icon, null, Modifier.size(26.dp), tint)
-                    }
-                    MiuixText(text = label, color = tint, style = MiuixTheme.textStyles.footnote1, maxLines = 1)
-                }
-            }
-        }
+                .onSizeChanged { barHeight = with(density) { it.height.toDp() } }
+                .padding(horizontal = ContentMargin),
+            items = items,
+            selectedIndex = selectedIndex,
+            onSelect = { index -> tabs.getOrNull(index)?.first?.let { if (it != selected) onTabClick(it) } },
+            backdrop = glassBackdrop,
+        )
     }
 }
 

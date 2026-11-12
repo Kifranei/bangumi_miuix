@@ -69,6 +69,7 @@ data class ComposeSetting(
         @SerialName("forceOpenUrlInBrowser") val forceOpenUrlInBrowser: Boolean = false,
         @SerialName("cacheState") val cacheState: Boolean = true,
         @SerialName("topAppBarScrollUp") val topAppBarScrollUp: Boolean = true,
+        @SerialName("topAppBarProgressiveBlur") val topAppBarProgressiveBlur: Boolean = true,
 
         @SerialName("trackingDesc") val trackingDesc: Boolean = false,
 
